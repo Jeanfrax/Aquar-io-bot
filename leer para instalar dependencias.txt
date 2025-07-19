@@ -1,0 +1,2 @@
+cd "ubicación del archivo con las independencias"
+pip install -r requerimientos.txt
