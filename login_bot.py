@@ -5,15 +5,17 @@ import cv2
 import gymnasium as gym
 from gymnasium import spaces
 from playwright.sync_api import sync_playwright
-from stable_baselines3 import DQN
-from stable_baselines3.common.monitor import Monitor
-from stable_baselines3.common.callbacks import EvalCallback
 
 # ------------------------------------------------------
 # 1) Definición del entorno AquarEnv
 # ------------------------------------------------------
 _playwright = sync_playwright().start()
-_browser = _playwright.chromium.launch(headless=False)  # ¡modo visible!
+
+_browser = _playwright.chromium.launch(
+    headless=True,
+    args=["--no-sandbox", "--disable-setuid-sandbox"]
+)
+
 
 class AquarEnv(gym.Env):
     metadata = {"render.modes": ["human"]}
@@ -120,14 +122,26 @@ class AquarEnv(gym.Env):
     def close(self):
         self.context.close()
 
+# Al final de login_bot.py
+def do_login(seed=None):
+    """
+    Arranca AquarEnv, hace login, cierra y devuelve True/False.
+    `seed` solo sirve si quieres variar el nick.
+    """
+    try:
+        if seed is not None:
+            import random
+            random.seed(seed)
+        env = AquarEnv()
+        obs, info = env.reset()   # aquí ocurre el login
+        # env.close()
+        return True
+    except Exception as e:
+        print("ERROR en do_login:", e)
+        return False
 
-# ------------------------------------------------------
-# 2) MAIN: primero TEST
-# ------------------------------------------------------
 if __name__ == "__main__":
-    print("\n--- TEST DE LOGIN ---")
-    env = AquarEnv()
-    obs, info = env.reset()   # aquí ocurre el login
-    print("Login OK, observación shape:", obs.shape)
-    env.close()
-    print("--- TEST COMPLETADO ---")
+    # Test manual de un solo login
+    ok = do_login()
+    print("Login único:", "OK" if ok else "FAIL")
+
